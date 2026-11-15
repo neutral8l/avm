@@ -5,8 +5,6 @@
 *{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--t);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 header{background:var(--c);border-bottom:1px solid var(--b);padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 header h1{font-size:16px;margin:0 12px 0 0}main{max-width:1100px;margin:0 auto;padding:14px}
-body { cursor: url(' https://cdn.cursors-4u.net/css-previews/tinkerbell-purple-glitter-wings-51dfbdd2-css.webp ') 0 5 , auto !important;}
-button { cursor: url(' https://cdn.cursors-4u.net/css-previews/tinkerbell-purple-glitter-wings-51dfbdd2-css.webp ') 0 5 , auto !important;}
 button,select,input,textarea{font:inherit;color:var(--t);background:var(--c);border:1px solid var(--b);border-radius:7px;padding:6px 10px}
 button{cursor:pointer}button.p,button.on{background:var(--a);color:#fff;border-color:var(--a)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
@@ -36,6 +34,14 @@ td input{width:100%;min-width:60px}.wrap{overflow-x:auto}tr.me{font-weight:600}t
 .cb{position:relative}.cb input{width:100%}
 .cbl{position:absolute;z-index:30;left:0;right:0;top:100%;margin-top:2px;max-height:230px;overflow:auto;background:var(--c);border:1px solid var(--b);border-radius:7px;box-shadow:0 8px 20px #0003;display:none}
 .cbl div{padding:8px 10px;cursor:pointer;font-size:14px;color:var(--t);border-bottom:1px solid var(--b)}.cbl div:last-child{border:0}
+#rw{position:fixed;right:16px;bottom:16px;z-index:12;width:min(330px,calc(100vw - 32px));background:var(--c);border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 24px #0003;font-size:13px}
+#rw .h{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;font-weight:600;user-select:none}
+#rw .n{background:var(--r);color:#fff;border-radius:99px;padding:0 7px;font-size:11px;line-height:18px}
+#rw .bd{padding:0 12px 12px}#rw.min .bd{display:none}
+#rwl{max-height:34vh;overflow:auto;margin-bottom:8px}
+#rwl .it{display:flex;gap:6px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--b)}#rwl .it .d{white-space:nowrap}
+#rwl .it button{padding:0 7px;line-height:20px}
+#rw .f{display:flex;gap:6px;flex-wrap:wrap}#rw .f input[type=text]{flex:1 1 100%}#rw .f input[type=date]{flex:1;min-width:0}
 .toast{display:none;position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1d2430;color:#fff;padding:10px 16px;border-radius:8px;z-index:50;max-width:92vw;font-size:13px}
 #ov2{display:none;position:fixed;inset:0;background:#0007;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 10px;z-index:19}
 #m2{background:var(--c);border-radius:12px;padding:16px;width:min(560px,100%)}
@@ -48,6 +54,7 @@ td input{width:100%;min-width:60px}.wrap{overflow-x:auto}tr.me{font-weight:600}t
 <div id="ov"><div id="m"></div></div>
 <div id="ov2"><div id="m2"></div></div>
 <div id="toast" class="toast"></div>
+<div id="rw"></div>
 <script src="firebase-config.js"></script>
 <script>
 /* Подключение общей базы Firebase: имитирует интерфейс claude.use('db') для приложения */
@@ -165,16 +172,15 @@ const PAY=['Безналичный с НДС','Безналичный без Н�
 const nm=(c,id)=>{const o=(S[c]||[]).find(x=>x.id==id);return o?(o.short||o.name||o.fio||o.tractorNo||'?'):'—'};
 const ord=id=>S.orders.find(o=>o.id==id),vol=o=>o.items.reduce((s,i)=>s+ +i.l,0);
 let P='manager',SUB={manager:'orders',logist:'orders',acc:'orders'},G={type:'sale'};
-const SUBS={manager:[['orders','Заявки'],['clients','Покупатели'],['nom','Номенклатура'],['rem','Напоминания'],['docs','Документы']],logist:[['orders','Заявки'],['trips','Сборка машин'],['nom','Номенклатура'],['suppliers','Поставщики'],['carriers','Перевозчики'],['vehicles','Транспорт'],['drivers','Водители'],['docs','Документы']],acc:[['orders','Заявки'],['contracts','Договоры'],['c1','Документы из 1С'],['docs','Реестр']]};
+const SUBS={manager:[['orders','Заявки'],['clients','Покупатели'],['nom','Номенклатура'],['docs','Документы']],logist:[['orders','Заявки'],['trips','Сборка машин'],['nom','Номенклатура'],['suppliers','Поставщики'],['carriers','Перевозчики'],['vehicles','Транспорт'],['drivers','Водители'],['docs','Документы']],acc:[['orders','Заявки'],['contracts','Договоры'],['c1','Документы из 1С'],['docs','Реестр']]};
 function modal(h){$('#m').innerHTML=h;$('#ov').style.display='flex';enh($('#m'))}function closeM(){$('#ov').style.display='none'}
 $('#ov').onclick=e=>{if(e.target.id=='ov')closeM()};
 $('#ov2').onclick=e=>{if(e.target.id=='ov2')closeW()};
 function inp(f,v){const[k,l,t]=f;let h;if(t&&t.startsWith('sel:')){const c=t.slice(4);h=`<select data-k="${k}"><option value="">—</option>${S[c].map(o=>`<option value="${o.id}" ${o.id==v?'selected':''}>${esc(nm(c,o.id))}</option>`).join('')}</select>`}else h=`<input data-k="${k}" type="${t||'text'}" value="${esc(v)}">`;return `<label>${l}${h}</label>`}
 const read=()=>{const o={};document.querySelectorAll('#m [data-k]').forEach(e=>o[e.dataset.k]=e.value);return o};
 function render(){$('#nav').innerHTML=['manager','logist','acc'].map((p,i)=>`<button class="${P==p?'on':''}" onclick="P='${p}';render()">${i+1}. ${RN[p]}</button>`).join(' ');
- const rc=S.reminders.filter(r=>!r.done&&r.date<=today()).length;
- $('#sub').innerHTML=SUBS[P].map(([k,l])=>`<button class="${SUB[P]==k?'on':''}" onclick="SUB[P]='${k}';render()">${l}${k=='rem'&&rc?' ('+rc+')':''}</button>`).join('');
- const s=SUB[P];$('#body').innerHTML=s=='orders'?ordersV():s=='trips'?tripsV():E[s]?entV(s):s=='rem'?remV():s=='docs'?docsV(P!='acc'):s=='contracts'?conV():c1V();enh($('#body'))}
+ $('#sub').innerHTML=SUBS[P].map(([k,l])=>`<button class="${SUB[P]==k?'on':''}" onclick="SUB[P]='${k}';render()">${l}</button>`).join('');
+ const s=SUB[P];$('#body').innerHTML=s=='orders'?ordersV():s=='trips'?tripsV():E[s]?entV(s):s=='docs'?docsV(P!='acc'):s=='contracts'?conV():c1V();enh($('#body'));rwRender()}
 function entV(c){return `<div class="bar"><b>${TT[c]}</b><button class="p" onclick="editEnt('${c}')">+ Добавить</button></div><div class="cards">${S[c].map(o=>`<div class="card" onclick="editEnt('${c}',${o.id})">${esc(nm(c,o.id))}<small>${esc(o.inn?'ИНН '+o.inn:o.trailerNo||o.phone||(o.d?'плотность '+o.d:''))}</small></div>`).join('')||'<p class="m">Пока пусто</p>'}</div>`}
 function editEnt(c,id){const o=id?S[c].find(x=>x.id==id):{};modal(`<h3>${E[c].t}</h3><div class="grid">${E[c].f.map(f=>inp(f,o[f[0]])).join('')}</div><div class="bar"><button class="p" onclick="saveEnt('${c}',${id||0})">Сохранить</button><button onclick="closeM()">Отмена</button>${id?`<button onclick="delEnt('${c}',${id})">Удалить</button>`:''}</div>`)}
 function saveEnt(c,id){const d=read();if(id)Object.assign(S[c].find(x=>x.id==id),d);else S[c].push({id:uid(),...d});save();closeM();render()}
@@ -211,8 +217,6 @@ function orderTxt(id){const o=ord(id);gather(o);const t=ordText(o);modal(`<h3>З
 function orderDoc(id){const o=ord(id);gather(o);paper('Заявка на перевозку №'+o.no,ordText(o))}
 function ordText(o){const l=o.lg,s=S.suppliers.find(x=>x.id==l.supplierId)||{},c=S.clients.find(x=>x.id==o.clientId)||{},v=S.vehicles.find(x=>x.id==l.vehicleId)||{},d=S.drivers.find(x=>x.id==l.driverId)||{},r=S.carriers.find(x=>x.id==l.carrierId)||{},V=vol(o);
  return `Заявка №${o.no} от ${fd(o.date)}\n\nПеревозчик: ${r.full||r.name||'—'}, ИНН ${r.inn||''}\nПогрузка: ${s.full||s.name||'—'}, ИНН ${s.inn||''}\nГруз: ${o.items.map(i=>i.n+' '+i.l+' л').join('; ')}\nОбъём: ${V} л${l.mass?', масса '+l.mass+' кг, плотность '+(l.mass/V).toFixed(4):''}\nГрузополучатель: ${c.full||c.name||'—'}, ИНН ${c.inn||''}\nАдрес выгрузки: ${o.addr||'—'}\n\nТС: тягач ${v.tractor||''} ${v.tractorNo||''}, п/п ${v.trailer||''} ${v.trailerNo||''} (${v.total||''} л; секции: ${v.sections||''})\nВодитель: ${d.fio||'—'}, паспорт ${d.passport||''}, ВУ ${d.license||''}, тел. ${d.phone||''}`}
-function remV(){const L=[...S.reminders].sort((a,b)=>a.done-b.done||a.date.localeCompare(b.date));
- return `<div class="bar"><input id="rt" placeholder="Кому позвонить / что сделать"><input id="rd" type="date" value="${today()}" style="flex:0"><button class="p" onclick="if($('#rt').value){S.reminders.push({id:uid(),text:$('#rt').value,date:$('#rd').value});save();render()}">+ Напоминание</button></div><div class="wrap"><table>${L.map(r=>`<tr><td style="width:30px"><input type="checkbox" ${r.done?'checked':''} onchange="S.reminders.find(x=>x.id==${r.id}).done=this.checked;save();render()"></td><td class="${!r.done&&r.date<=today()?'od':''}">${fd(r.date)}</td><td style="${r.done?'text-decoration:line-through':''}">${esc(r.text)}</td><td><button onclick="S.reminders=S.reminders.filter(x=>x.id!=${r.id});save();render()">×</button></td></tr>`).join('')||'<tr><td class="m">Напоминаний нет</td></tr>'}</table></div>`}
 function conTxt(sale,p,no,date){const m=S.me;return `ДОГОВОР ${sale?'ПОСТАВКИ':'ПЕРЕВОЗКИ'} № ${no}\nот ${fd(date)}\n\n${m.full||m.name||'—'}, именуемое далее «${sale?'Поставщик':'Заказчик'}», в лице ${m.head||'—'}, действующего на основании ${m.basis||'—'}, и ${p.full||p.name||'—'}, именуемое далее «${sale?'Покупатель':'Перевозчик'}», в лице ${p.head||'—'}, действующего на основании ${p.basis||'—'}, заключили настоящий договор:\n\n1. Предмет. ${sale?'Поставщик обязуется передать, а Покупатель принять и оплатить нефтепродукты по заявкам Покупателя.':'Перевозчик обязуется доставить нефтепродукты по заявкам Заказчика, а Заказчик оплатить перевозку.'}\n2. Цена и порядок расчётов определяются в заявках и приложениях к договору.\n3. Количество и качество фиксируются в товарно-транспортных документах.\n4. Стороны несут ответственность в соответствии с законодательством РФ.\n5. Договор действует до 31.12.${new Date(date).getFullYear()} и продлевается, если ни одна из сторон не заявила об отказе.\n\nРЕКВИЗИТЫ СТОРОН\n\n${sale?'Поставщик':'Заказчик'}:\n${reqs(m)}\n\n${sale?'Покупатель':'Перевозчик'}:\n${reqs(p)}`}
 function conV(){const c=G.type=='sale'?'clients':'carriers';return `<div class="bar"><b>Генерация договора</b></div><div class="grid"><label>Тип<select id="ct" onchange="G.type=this.value;render()"><option value="sale" ${G.type=='sale'?'selected':''}>Договор поставки (с заказчиком)</option><option value="trans" ${G.type=='trans'?'selected':''}>Договор перевозки (с перевозчиком)</option></select></label><label>Контрагент<select id="cp">${opts(c)}</select></label><label>Дата<input type="date" id="cd" value="${today()}"></label></div><div class="bar"><button class="p" onclick="genCon()">Сформировать и сохранить</button></div>${docsV(false)}`}
 function genCon(){const c=G.type=='sale'?'clients':'carriers',p=S[c].find(x=>x.id==$('#cp').value);if(!p)return alert('Выберите контрагента');const n=S.docs.filter(d=>d.kind=='Договор').length+1+'/'+new Date().getFullYear(),dt=$('#cd').value,tx=conTxt(G.type=='sale',p,n,dt);
@@ -316,5 +320,21 @@ function tnDoc(id){const t=tr_(id);tg(t);
  <table class="tn" style="margin-top:8px"><tr><th style="width:50%">6. Перевозчик</th><th>7. Транспортное средство</th></tr><tr><td>${o2(cr)}<br>Водитель: ${esc(d.fio||'—')}, ВУ ${esc(d.license||'')}</td><td>Тягач: ${esc(v.tractor||'')} ${esc(v.tractorNo||'')}<br>Прицеп: ${esc(v.trailer||'')} ${esc(v.trailerNo||'')}${v.total?'<br>Вместимость '+esc(v.total)+' л':''}</td></tr></table>
  <div class="sign"><div>Грузоотправитель _____________</div><div>Водитель _____________</div><div>Грузополучатель _____________</div></div></div>
  <div class="bar"><button class="p" onclick="window.print()">Печать</button><button onclick="openTrip(${id})">Назад</button></div>`)}
+/* ===== Окно напоминаний (правый нижний угол) ===== */
+let RWMIN=false;try{RWMIN=localStorage.getItem('crm_rw_min')=='1'}catch(e){}
+let RWSH=false;try{RWSH=localStorage.getItem('crm_rw_done')=='1'}catch(e){}
+function rwInit(){const w=$('#rw');w.className=RWMIN?'min':'';
+ w.innerHTML=`<div class="h" onclick="rwToggle()"><span>🔔 Напоминания</span><span class="n" id="rwn" style="display:none"></span><span style="flex:1"></span><span id="rwa">${RWMIN?'▲':'▼'}</span></div><div class="bd"><div id="rwl"></div><label style="flex-direction:row;align-items:center;gap:6px;margin:0 0 8px;cursor:pointer;font-size:12px"><input type="checkbox" id="rwsh" style="width:auto" ${RWSH?'checked':''} onchange="rwShow(this.checked)">Показать выполненные</label><div class="f"><input type="text" id="rwt" placeholder="Кому позвонить / что сделать" onkeydown="if(event.key=='Enter')rwAdd()"><input type="date" id="rwd" value="${today()}"><button class="p" onclick="rwAdd()">+ Добавить</button></div></div>`}
+function rwToggle(){RWMIN=!RWMIN;$('#rw').classList.toggle('min',RWMIN);$('#rwa').textContent=RWMIN?'▲':'▼';try{localStorage.setItem('crm_rw_min',RWMIN?'1':'0')}catch(e){}}
+function rwRender(){const l=$('#rwl');if(!l)return;const op=S.reminders.filter(r=>!r.done).sort((a,b)=>String(a.date).localeCompare(String(b.date))),dn=RWSH?S.reminders.filter(r=>r.done).sort((a,b)=>String(b.date).localeCompare(String(a.date))):[],od=op.filter(r=>!r.date||r.date<=today()).length,n=$('#rwn');
+ n.textContent=od;n.style.display=od?'':'none';
+ const it=r=>`<div class="it"><input type="checkbox" ${r.done?'checked':''} title="${r.done?'Вернуть в активные':'Выполнено'}" onchange="${r.done?'rwUndo':'rwDone'}(${r.id})"><span class="d ${r.done||(r.date&&r.date>today())?'m':'od'}">${fd(r.date)}</span><span style="flex:1;${r.done?'text-decoration:line-through;color:var(--m)':''}">${esc(r.text)}</span><button title="Удалить" onclick="rwDel(${r.id})">×</button></div>`;
+ l.innerHTML=op.map(it).join('')+dn.map(it).join('')||'<div class="m">Нет напоминаний</div>'}
+function rwAdd(){const t=$('#rwt').value.trim();if(!t){$('#rwt').focus();return}S.reminders.push({id:uid(),text:t,date:$('#rwd').value||today()});$('#rwt').value='';save();render()}
+function rwDone(id){const r=S.reminders.find(x=>x.id==id);if(r)r.done=true;save();render()}
+function rwDel(id){S.reminders=S.reminders.filter(x=>x.id!=id);save();render()}
+function rwShow(v){RWSH=!!v;try{localStorage.setItem('crm_rw_done',RWSH?'1':'0')}catch(e){}rwRender()}
+function rwUndo(id){const r=S.reminders.find(x=>x.id==id);if(r)r.done=false;save();render()}
+rwInit();
 boot();
 </script></body></html>
