@@ -5,8 +5,6 @@
 *{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--t);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 header{background:var(--c);border-bottom:1px solid var(--b);padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 header h1{font-size:16px;margin:0 12px 0 0}main{max-width:1100px;margin:0 auto;padding:14px}
-body { cursor: url(' https://cdn.cursors-4u.net/css-previews/tinkerbell-purple-glitter-wings-51dfbdd2-css.webp ') 0 5 , auto !important;}
-button { cursor: url(' https://cdn.cursors-4u.net/css-previews/tinkerbell-purple-glitter-wings-51dfbdd2-css.webp ') 0 5 , auto !important;}
 button,select,input,textarea{font:inherit;color:var(--t);background:var(--c);border:1px solid var(--b);border-radius:7px;padding:6px 10px}
 button{cursor:pointer}button.p,button.on{background:var(--a);color:#fff;border-color:var(--a)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
@@ -188,7 +186,7 @@ $('#ov').onclick=e=>{if(e.target.id=='ov')closeM()};
 $('#ov2').onclick=e=>{if(e.target.id=='ov2')closeW()};
 function inp(f,v){const[k,l,t]=f;let h;if(t&&t.startsWith('sel:')){const c=t.slice(4);h=`<select data-k="${k}"><option value="">—</option>${S[c].map(o=>`<option value="${o.id}" ${o.id==v?'selected':''}>${esc(nm(c,o.id))}</option>`).join('')}</select>`}else h=`<input data-k="${k}" type="${t||'text'}" value="${esc(v)}">`;return `<label>${l}${h}</label>`}
 const read=()=>{const o={};document.querySelectorAll('#m [data-k]').forEach(e=>o[e.dataset.k]=e.value);return o};
-function render(){$('#nav').innerHTML=['manager','logist','acc'].map((p,i)=>`<button class="${P==p?'on':''}" onclick="P='${p}';render()">${i+1}. ${RN[p]}</button>`).join(' ');
+function render(){$('#nav').innerHTML=['manager','logist','acc'].map((p,i)=>`<button class="${P==p?'on':''}" onclick="setRole('${p}')">${i+1}. ${RN[p]}</button>`).join(' ');
  $('#sub').innerHTML=SUBS[P].map(([k,l])=>`<button class="${SUB[P]==k?'on':''}" onclick="SUB[P]='${k}';render()">${l}</button>`).join('');
  const s=SUB[P];$('#body').innerHTML=s=='orders'?ordersV():s=='hist'?histV():s=='trips'?tripsV():E[s]?entV(s):s=='docs'?docsV(P!='acc'):s=='contracts'?conV():c1V();enh($('#body'));rwRender()}
 function entV(c){return `<div class="bar"><b>${TT[c]}</b><button class="p" onclick="editEnt('${c}')">+ Добавить</button></div><div class="cards">${S[c].map(o=>`<div class="card" onclick="editEnt('${c}',${o.id})">${esc(nm(c,o.id))}<small>${esc(o.inn?'ИНН '+o.inn:o.trailerNo||o.phone||(o.d?'плотность '+o.d:''))}</small></div>`).join('')||'<p class="m">Пока пусто</p>'}</div>`}
@@ -204,6 +202,7 @@ const SN=Object.fromEntries(STS.map(s=>[s[0],s[1]])),SC=Object.fromEntries(STS.m
 const stOf=o=>SN[o.status]?o.status:'new',isAct=o=>!['closed','paid'].includes(stOf(o));
 const stTag=o=>{const k=stOf(o);return `<span class="tag" style="background:color-mix(in srgb,${SC[k]} 22%,var(--c));border:1px solid ${SC[k]}">${SN[k]}</span>`};
 let OF={q:'',st:'all',who:'all',from:'',to:'',drv:'',id:'',sort:'new'};
+const OFS={};function setRole(p){OFS[P]=OF;P=p;OF=OFS[p]||{q:'',st:'all',who:'all',from:'',to:'',drv:'',id:'',sort:'new'};render()}
 function ordHay(o){const l=o.lg||{},c=S.clients.find(x=>x.id==o.clientId)||{},v=S.vehicles.find(x=>x.id==l.vehicleId)||{},d=S.drivers.find(x=>x.id==l.driverId)||{};
  return [o.no,c.name,c.full,c.short,c.inn,o.items.map(i=>i.n).join(' '),o.addr,o.pay,SN[stOf(o)],nm('suppliers',l.supplierId),nm('carriers',l.carrierId),v.tractorNo,v.trailerNo,d.fio].join(' ').toLowerCase()}
 function ordBase(){const q=OF.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
