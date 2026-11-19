@@ -55,6 +55,45 @@ td input{width:100%;min-width:60px}.wrap{overflow-x:auto}tr.me{font-weight:600}t
 <div id="ov2"><div id="m2"></div></div>
 <div id="toast" class="toast"></div>
 <div id="rw"></div>
+<script src="firebase-config.js"></script>
+<script>
+/* Подключение общей базы Firebase: имитирует интерфейс claude.use('db') для приложения */
+(function(){let res;window.__fb=new Promise(r=>res=r);window.__fbResolve=res;window.__fbStarted=false;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+window.claude={use:async n=>{const a=await Promise.race([window.__fb,sleep(7000).then(()=>window.__fbStarted?window.__fb:null)]);return a?(a[n]||null):null}}})();
+</script>
+<script type="module">
+const done=v=>window.__fbResolve(v);
+try{
+ const cfg=window.FIREBASE_CONFIG;
+ if(!cfg||!cfg.apiKey||/ВСТАВЬТЕ|YOUR_/i.test(cfg.apiKey)||!cfg.projectId){done(null)}
+ else{
+  window.__fbStarted=true;
+  const B='https://www.gstatic.com/firebasejs/10.12.2/';
+  const [A,Au,F]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-firestore.js')]);
+  const app=A.initializeApp(cfg),auth=Au.getAuth(app),fs=F.getFirestore(app);
+  const mapErr=e=>({code:e&&e.code=='permission-denied'?'invalid_argument':e&&e.code=='resource-exhausted'?'quota_exceeded':(e&&e.code)||'unavailable',message:(e&&e.message)||''});
+  const api={
+   db:{doc:p=>({set:async d=>{try{await F.setDoc(F.doc(fs,p),d)}catch(e){throw mapErr(e)}},delete:async()=>{try{await F.deleteDoc(F.doc(fs,p))}catch(e){throw mapErr(e)}}}),
+    collection:c=>({onSnapshot:(next,err)=>F.onSnapshot(F.collection(fs,c),s=>{if(s.metadata&&s.metadata.fromCache)return;next({docs:s.docs.map(d=>({id:d.id,data:()=>d.data()}))})},e=>{if(err)err(mapErr(e))})})},
+   user:{can:async()=>true,id:async()=>auth.currentUser?auth.currentUser.uid:null,isOwner:async()=>false,canEdit:async()=>true}};
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:100;background:var(--bg,#f4f5f7);display:none;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML='<form id="lf" style="background:var(--c,#fff);border:1px solid var(--b,#dfe3e8);border-radius:12px;padding:22px;width:min(340px,100%);display:flex;flex-direction:column;gap:10px"><h3 style="margin:0">CRM · вход</h3><label>E-mail<input id="le" type="email" autocomplete="username" required></label><label>Пароль<input id="lp" type="password" autocomplete="current-password" required></label><div id="lm" style="color:var(--r,#d92d20);font-size:13px;min-height:16px"></div><button class="p" type="submit">Войти</button></form>';
+  document.body.appendChild(ov);
+  ov.querySelector('#lf').onsubmit=async e=>{e.preventDefault();const m=ov.querySelector('#lm');m.textContent='';
+   try{await Au.signInWithEmailAndPassword(auth,ov.querySelector('#le').value.trim(),ov.querySelector('#lp').value)}
+   catch(x){const c=x&&x.code||'';m.textContent=/invalid|wrong-password|user-not-found|invalid-email/.test(c)?'Неверный e-mail или пароль':c=='auth/too-many-requests'?'Слишком много попыток. Подождите и повторите.':c=='auth/network-request-failed'?'Нет связи с сервером':'Не удалось войти ('+c+')'}};
+  let started=false;
+  Au.onAuthStateChanged(auth,u=>{
+   if(u){ov.style.display='none';
+    if(!started){started=true;
+     const h=document.querySelector('header'),b=document.createElement('button');b.textContent='Выйти';b.title=u.email||'';
+     b.onclick=()=>Au.signOut(auth).then(()=>location.reload());h&&h.appendChild(b);done(api)}}
+   else{if(started){location.reload();return}ov.style.display='flex'}});
+ }
+}catch(e){console.error(e);done(null)}
+</script>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let S={clients:[],suppliers:[],carriers:[],vehicles:[],drivers:[],orders:[],reminders:[],docs:[],trips:[],nom:[],files:[],me:{},seq:1};
