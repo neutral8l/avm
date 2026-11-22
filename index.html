@@ -192,7 +192,24 @@ function render(){$('#nav').innerHTML=['manager','logist','acc'].map((p,i)=>`<bu
  $('#sub').innerHTML=SUBS[P].map(([k,l])=>`<button class="${SUB[P]==k?'on':''}" onclick="SUB[P]='${k}';render()">${l}</button>`).join('');
  const s=SUB[P];$('#body').innerHTML=s=='orders'?ordersV():s=='hist'?histV():s=='drvord'?drvOrdV():s=='trips'?tripsV():E[s]?entV(s):s=='docs'?docsV(P!='acc'):s=='contracts'?conV():c1V();enh($('#body'));rwRender()}
 function entV(c){return `<div class="bar"><b>${TT[c]}</b><button class="p" onclick="editEnt('${c}')">+ Добавить</button></div><div class="cards">${S[c].map(o=>`<div class="card" onclick="editEnt('${c}',${o.id})">${esc(nm(c,o.id))}<small>${esc(o.inn?'ИНН '+o.inn:o.trailerNo||o.phone||(o.d?'плотность '+o.d:''))}</small></div>`).join('')||'<p class="m">Пока пусто</p>'}</div>`}
-function editEnt(c,id){const o=id?S[c].find(x=>x.id==id):{};modal(`<h3>${E[c].t}</h3><div class="grid">${E[c].f.map(f=>inp(f,o[f[0]])).join('')}</div><div class="bar"><button class="p" onclick="saveEnt('${c}',${id||0})">Сохранить</button><button onclick="closeM()">Отмена</button>${id?`<button onclick="delEnt('${c}',${id})">Удалить</button>`:''}</div>`)}
+const DADATA_KEY='59fbdfab23d7bfcc2e16ad145a67a48c6273839e';
+function innOk(v){v=String(v||'').trim();if(!/^\d+$/.test(v))return false;const d=v.split('').map(Number),ck=(w)=>w.reduce((q,k,i)=>q+k*d[i],0)%11%10;
+ if(v.length==10)return ck([2,4,10,3,5,9,4,6,8])==d[9];
+ if(v.length==12)return ck([7,2,4,10,3,5,9,4,6,8])==d[10]&&ck([3,7,2,4,10,3,5,9,4,6,8])==d[11];return false}
+async function innFind(c,id){const inn=(($('#m [data-k="inn"]')||{}).value||'').trim(),msg=$('#innmsg'),set=(k,v)=>{const e=$('#m [data-k="'+k+'"]');if(e&&v)e.value=v};
+ if(!innOk(inn)){msg.textContent='ИНН введён неверно: нужно 10 цифр (организация) или 12 (ИП), с верной контрольной суммой.';msg.style.color='#d1242f';return}
+ const dup=S[c].find(x=>x.inn==inn&&x.id!=id);
+ msg.style.color='';msg.textContent='Ищу…';
+ try{const r=await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Authorization':'Token '+DADATA_KEY},body:JSON.stringify({query:inn})});
+  if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json(),x=(j.suggestions||[])[0];
+  if(!x){msg.textContent='По этому ИНН ничего не найдено. Заполните данные вручную.';msg.style.color='#d1242f';return}
+  const d=x.data||{},n=d.name||{},m=d.management||{},ip=d.type=='INDIVIDUAL';
+  set('name',n.short_with_opf||n.full_with_opf||x.value);set('full',n.full_with_opf||x.value);set('short',n.short_with_opf||x.value);set('kpp',d.kpp);set('ogrn',d.ogrn);
+  set('head',ip?(n.full_with_opf||x.value):[m.post,m.name].filter(Boolean).join(' '));set('legal',(d.address||{}).unrestricted_value||(d.address||{}).value);
+  const st=(d.state||{}).status;msg.style.color=(st&&st!='ACTIVE')?'#d1242f':'#1a7f37';
+  msg.textContent='Найдено: '+x.value+(st=='LIQUIDATED'?' — ЛИКВИДИРОВАНА':st=='LIQUIDATING'?' — в процессе ликвидации':st=='BANKRUPT'?' — банкротство':st=='REORGANIZING'?' — реорганизация':'')+(dup?'. Внимание: контрагент с таким ИНН уже есть: '+(dup.short||dup.name):'')+'. Проверьте данные и сохраните.'}
+ catch(e){msg.style.color='#d1242f';msg.textContent='Не удалось получить данные ('+e.message+'). Заполните вручную.'}}
+function editEnt(c,id){const o=id?S[c].find(x=>x.id==id):{};const lk=['clients','suppliers','carriers'].includes(c);modal(`<h3>${E[c].t}</h3>${lk?`<div class="bar"><input data-k="inn" inputmode="numeric" maxlength="12" placeholder="ИНН" value="${esc(o.inn||'')}" style="max-width:180px" oninput="if(innOk(this.value)&&!${id||0})innFind('${c}',${id||0})"><button class="p" onclick="innFind('${c}',${id||0})">Найти по ИНН</button><span id="innmsg" class="m"></span></div>`:''}<div class="grid">${E[c].f.filter(f=>!(lk&&f[0]=='inn')).map(f=>inp(f,o[f[0]])).join('')}</div><div class="bar"><button class="p" onclick="saveEnt('${c}',${id||0})">Сохранить</button><button onclick="closeM()">Отмена</button>${id?`<button onclick="delEnt('${c}',${id})">Удалить</button>`:''}</div>`)}
 function saveEnt(c,id){const d=read();if(id)Object.assign(S[c].find(x=>x.id==id),d);else S[c].push({id:uid(),...d});save();closeM();render()}
 let ASKF=null;function ask(m,f){ASKF=f;$('#m2').innerHTML=`<h3>${esc(m)}</h3><div class="bar"><button class="p" onclick="closeW();ASKF()">Да</button><button onclick="closeW()">Нет</button></div>`;$('#ov2').style.display='flex'}
 function delEnt(c,id){ask('Удалить?',()=>{S[c]=S[c].filter(x=>x.id!=id);save();closeM();render()})}
