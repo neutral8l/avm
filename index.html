@@ -48,6 +48,7 @@ td input{width:100%;min-width:60px}.wrap{overflow-x:auto}tr.me{font-weight:600}t
 @media print{body *{visibility:hidden}.paper,.paper *{visibility:visible}.paper{position:absolute;left:0;top:0;width:100%;border:0}}
 .lt tr.sub td{background:color-mix(in srgb,#1f6feb 22%,#161b22);border-top:2px solid #1f6feb}.lt tr.tot td{border-top:2px solid #888;font-weight:400}.och input[type=checkbox]{width:18px;height:18px}
 *{cursor:var(--cat,auto) !important}
+.tag{white-space:nowrap}.wrap th{white-space:nowrap}
 </style></head><body>
 <header><h1>CRM · нефтепродукты</h1><span id="nav"></span><span style="flex:1"></span><span id="st" class="tag">Загрузка…</span><button id="imp" style="display:none" onclick="importLocal()">Импорт из браузера</button><button onclick="editMe()">Наша организация</button></header>
 <!-- v2: добавлена сборка машин по секциям -->
@@ -221,7 +222,7 @@ function upImg(k,el){const f=el.files[0];if(!f)return;Object.assign(S.me,read())
 const STS=[['new','Новая','#6b7482'],['work','В работе','#1f6feb'],['loaded','Загружена','#b54708'],['transit','В пути','#7a5af8'],['unloaded','Выгружена','#0e9384'],['closed','Закрыта','#344054'],['paid','Оплачена','#1a7f37']];
 const SN=Object.fromEntries(STS.map(s=>[s[0],s[1]])),SC=Object.fromEntries(STS.map(s=>[s[0],s[2]]));
 const stOf=o=>SN[o.status]?o.status:'new',isAct=o=>!['closed','paid'].includes(stOf(o));
-const stTag=o=>{const k=stOf(o);return `<span class="tag" style="background:color-mix(in srgb,${SC[k]} 22%,var(--c));border:1px solid ${SC[k]}">${SN[k]}</span>`};
+const stTag=(o,dk)=>{const k=stOf(o);return dk?`<span class="tag" style="background:color-mix(in srgb,${SC[k]} 60%,#161b22);border:1px solid ${SC[k]};color:#fff">${SN[k]}</span>`:`<span class="tag" style="background:color-mix(in srgb,${SC[k]} 22%,var(--c));border:1px solid ${SC[k]}">${SN[k]}</span>`};
 let OF={q:'',st:'all',who:'all',from:'',to:'',drv:'',id:'',sort:'new'};
 const OFS={};function setRole(p){OFS[P]=OF;P=p;OF=OFS[p]||{q:'',st:'all',who:'all',from:'',to:'',drv:'',id:'',sort:'new'};render()}
 function ordHay(o){const l=eff(o),c=S.clients.find(x=>x.id==o.clientId)||{},tr=o.items.map((i,ix)=>{const e=effI(o,ix),v=S.vehicles.find(x=>x.id==e.vehicleId)||{},d=S.drivers.find(x=>x.id==e.driverId)||{};return [nm('suppliers',e.supplierId),nm('carriers',e.carrierId),v.tractorNo,v.trailerNo,d.fio].join(' ')}).join(' ');
@@ -252,13 +253,13 @@ const lastRec=o=>o.thread.length?`<div class="m" style="padding:4px 8px">Пос�
 function mTog(id,on){if(on)MSEL[id]=1;else delete MSEL[id];ordUpd()}
 function grpCard(t,os){const d=S.drivers.find(x=>x.id==t.driverId)||{},v=S.vehicles.find(x=>x.id==t.vehicleId)||{};
  return `<div class="oc ${os.some(o=>o.stage==P)?'me':''}"><div class="och"><b onclick="openTrip(${t.id})" style="cursor:pointer;color:#1f6feb">Машина №${t.no}</b><span>Заявки: ${os.map(o=>'№'+o.no).join(', ')}</span><span>${esc(nm('carriers',t.carrierId))}${d.id?' · '+esc(d.fio||''):''}${v.id?' · '+esc(jn([v.tractorNo,v.trailerNo])):''}</span><span class="sp"></span><button class="bg" onclick="openTrip(${t.id})">Открыть машину</button></div>
- <table class="lt">${LTH}${os.map(o=>{const l=eff(o);return `<tr class="sub"><td colspan="6"><b onclick="openOrder(${o.id})" style="cursor:pointer;color:#1f6feb">Заявка №${o.no} от ${fd(o.date)}</b> · ${esc(nm('clients',o.clientId))} ${stageTag(o)} ${stTag(o)} <span style="float:right">${ordBtns(o)}</span></td></tr>${ordRows(o)}${ordFoot(o,l,1)}`}).join('')}
+ <table class="lt">${LTH}${os.map(o=>{const l=eff(o);return `<tr class="sub"><td colspan="6"><b onclick="openOrder(${o.id})" style="cursor:pointer;color:#1f6feb">Заявка №${o.no} от ${fd(o.date)}</b> · ${esc(nm('clients',o.clientId))} ${stageTag(o)} ${stTag(o,1)} <span style="float:right">${ordBtns(o)}</span></td></tr>${ordRows(o)}${ordFoot(o,l,1)}`}).join('')}
  <tr class="tot"><td colspan="4"><b>Общая доставка на машину:</b> ${+t.delivery?(+t.delivery).toLocaleString('ru-RU')+' ₽':'—'} <span class="m">(задаётся в окне машины)</span></td><td>${ordTot(os)}</td><td></td></tr></table></div>`}
 function ordCards(L){const out=[],done={};
  L.forEach(o=>{if(done[o.id])return;const t=tripOf(o),g=t?L.filter(x=>tripOf(x)===t):[];
   if(t&&g.length>1){g.forEach(x=>done[x.id]=1);out.push(grpCard(t,g));return}
   done[o.id]=1;const l=eff(o),fromM=o.thread.find(x=>x.r=='manager'),can=o.stage=='logist'&&o.items.some((i,ix)=>(+i.l||0)-asg(o.id,ix)>0);
-  out.push(`<div class="oc ${o.stage==P?'me':''}"><div class="och">${can?`<input type="checkbox" title="Выбрать для объединения в машину" ${MSEL[o.id]?'checked':''} onchange="mTog(${o.id},this.checked)">`:''}<b onclick="openOrder(${o.id})" style="cursor:pointer;color:#1f6feb">Заявка №${o.no} от ${fd(o.date)}</b><span>${fromM?'От менеджера: '+esc(fromM.w):''}</span>${stageTag(o)}${stTag(o)}<span class="sp"></span>${ordBtns(o)}</div>
+  out.push(`<div class="oc ${o.stage==P?'me':''}"><div class="och">${can?`<input type="checkbox" title="Выбрать для объединения в машину" ${MSEL[o.id]?'checked':''} onchange="mTog(${o.id},this.checked)">`:''}<b onclick="openOrder(${o.id})" style="cursor:pointer;color:#1f6feb">Заявка №${o.no} от ${fd(o.date)}</b><span>${fromM?'От менеджера: '+esc(fromM.w):''}</span>${stageTag(o)}${stTag(o,1)}<span class="sp"></span>${ordBtns(o)}</div>
  <table class="lt">${LTH}${ordRows(o)}${ordFoot(o,l,0).replace('<td></td></tr>','<td></td></tr>')}`+`</table>${lastRec(o)}</div>`)});
  return out.join('')||`<div class="m">${S.orders.length?'Ничего не найдено. Измените поиск или фильтры.':'Заявок нет'}</div>`}
 function mergeWin(){const os=S.orders.filter(o=>MSEL[o.id]);if(!os.length){toast('Отметьте галочкой заявки в списке');return}
